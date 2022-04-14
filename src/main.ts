@@ -91,15 +91,11 @@ async function run(): Promise<void> {
           d.templateRepository.name === repoName &&
           d.templateRepository.owner.login === org
       )
-      .map(d => `[${d.nameWithOwner}](${d.url})`)
+      .map(d => {
+        name: d.nameWithOwner;
+        url: d.url;
+      })
 
-    const output = `# ${reposProducedByThis.length} Repositories using ${
-      repoName === repo.repo ? 'template' : `${repoName}`
-    }\n\n${
-      reposProducedByThis.length ? `* ${reposProducedByThis.join('\n* ')}` : ''
-    }`
-
-    core.info(output)
     core.setOutput("repositories", JSON.stringify(reposProducedByThis))
   } catch (error) {
     core.setFailed(error.message)
