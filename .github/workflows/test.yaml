@@ -1,0 +1,17 @@
+name: "Test"
+on:
+  workflow_dispatch: {}
+
+jobs:
+  Test:
+    name: "Test"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: David-Lor/template-repository-usage-action@develop
+        id: action-get
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          org: "David-Lor"
+          repo: "generic-template"
+      - run: |-
+          echo "Action output: ${{ steps.action-get.outputs.repositories }}"
