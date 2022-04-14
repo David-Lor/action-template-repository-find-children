@@ -1,6 +1,6 @@
 # "Find GitHub Template Repository Children" GitHub Action
 
-A GitHub action for finding which repositories, under a single user/organization, are using a certain template.
+A GitHub action for finding which repositories, under a single user/organization, are using a certain template (owned by the same user/organization).
 
 ## Background
 
@@ -8,6 +8,8 @@ This project is forked from [maael/template-repository-usage-action](https://git
 While the original repository updates a README file including the children repositories found, this fork is focused on just providing an output of the found repositories on the GitHub Workflow where used.
 
 ## Usage
+
+**This action is limited to finding the child repositories of a certain template repository, created by the same user/organization that owns the template repository.**
 
 ```yaml
 steps:
