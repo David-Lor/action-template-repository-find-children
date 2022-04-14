@@ -8,12 +8,7 @@ on:
       - "src/**"
       - "package.json"
       - ".github/workflows/build.yaml"
-  workflow_dispatch:
-    inputs:
-      build:
-        description: "Build & Push? (yes/no)"
-        required: true
-        default: "yes"
+  workflow_dispatch: {}
 
 jobs:
   Build:
