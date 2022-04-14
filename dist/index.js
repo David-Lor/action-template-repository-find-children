@@ -88,9 +88,10 @@ function run() {
                 .filter(d => d.templateRepository &&
                 d.templateRepository.name === repoName &&
                 d.templateRepository.owner.login === org)
-                .map(d => `[${d.nameWithOwner}](${d.url})`);
-            const output = `# ${reposProducedByThis.length} Repositories using ${repoName === repo.repo ? 'template' : `${repoName}`}\n\n${reposProducedByThis.length ? `* ${reposProducedByThis.join('\n* ')}` : ''}`;
-            core.info(output);
+                .map(d => {
+                name: d.nameWithOwner;
+                url: d.url;
+            });
             core.setOutput("repositories", JSON.stringify(reposProducedByThis));
         }
         catch (error) {
