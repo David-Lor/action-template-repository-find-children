@@ -2,7 +2,8 @@ name: "Build"
 on:
   push:
     branches:
-      - "develop"
+      - "**"
+      - "!main"
   workflow_dispatch:
     inputs:
       build:
