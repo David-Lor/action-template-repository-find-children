@@ -3,12 +3,37 @@ on:
   push:
     branches:
       - "develop"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      build:
+        description: "Force build steps? (yes/no)"
+        required: true
+        default: "yes"
 
 jobs:
-  Build:
-    name: "Build"
+  Conditionals:
+    name: "Conditionals"
     runs-on: "ubuntu-latest"
+    outputs:
+      any-changed: "${{ steps.changed-files.outputs.any_changed }}"  # 'true'/'false'
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+      - name: "Identify changes"
+        id: changed-files
+        uses: "tj-actions/changed-files@b94562c2d4c1b4174b82462f4ed3a2942877032d"
+        with:
+          files: |
+            src/**
+            package.json
+            .github/workflows/build.yaml
+
+  Build:
+    name: "Build & Push"
+    runs-on: "ubuntu-latest"
+    needs:
+      - "Conditionals"
+    if: "${{ needs.Conditionals.outputs.any-changed == 'true' || github.event.inputs.build == 'yes' }}"
     steps:
       # Checkout
       - name: "Checkout"
