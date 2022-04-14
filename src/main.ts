@@ -2,7 +2,6 @@ import {promises as fs} from 'fs'
 import path from 'path'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import simpleGit from 'simple-git/promise'
 
 interface Response {
   repositoryOwner: {
@@ -32,14 +31,6 @@ async function run(): Promise<void> {
     const authorEmail =
       core.getInput('author_email') || 'matt.a.elphy@gmail.com'
     const authorName = core.getInput('author_name') || 'Matthew Elphick'
-    const baseDir = path.join(process.cwd(), core.getInput('cwd') || '')
-    const readmePath = path.join(
-      baseDir,
-      core.getInput('readmePath') || 'README.md'
-    )
-    const readmeContent = await fs.readFile(readmePath, {
-      encoding: 'utf-8'
-    })
 
     const token: string = core.getInput('token')
     const octokit = github.getOctokit(token, {
@@ -108,27 +99,8 @@ async function run(): Promise<void> {
       reposProducedByThis.length ? `* ${reposProducedByThis.join('\n* ')}` : ''
     }`
 
-    const updatedReadme = readmeContent.replace(
-      /<!-- TEMPLATE_LIST_START -->[\s\S]+<!-- TEMPLATE_LIST_END -->/,
-      `<!-- TEMPLATE_LIST_START -->\n${output}\n<!-- TEMPLATE_LIST_END -->`
-    )
-
-    await fs.writeFile(readmePath, updatedReadme)
-
-    if (readmeContent !== updatedReadme) {
-      core.info('Changes found, committing')
-      const git = simpleGit(baseDir)
-      await git.addConfig('user.email', authorEmail)
-      await git.addConfig('user.name', authorName)
-      await git.add(readmePath)
-      await git.commit(`docs: 📝 Updating template usage list`, undefined, {
-        '--author': `"${authorName} <${authorEmail}>"`
-      })
-      await git.push()
-      core.info('Committed')
-    } else {
-      core.info('No changes, skipping')
-    }
+    core.info(output)
+    core.setOutput("repositories", JSON.stringify(reposProducedByThis))
   } catch (error) {
     core.setFailed(error.message)
   }
