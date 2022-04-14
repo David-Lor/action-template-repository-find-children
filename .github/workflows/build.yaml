@@ -22,7 +22,12 @@ jobs:
       - name: "npm package"
         run: "npm run package"
 
-      # debug...
-      - name: "debug changes"
+      # Commit & Push
+      - name: "List changes"
         run: "git status"
-
+      - name: "Commit & Push changes"
+        uses: "EndBug/add-and-commit@8b817249e9bc4aac26a3dbf27ab69f410c1baf19"
+        with:
+          add: "."
+          push: "true"
+          message: "Build"
