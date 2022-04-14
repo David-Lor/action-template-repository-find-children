@@ -11,7 +11,6 @@ jobs:
         uses: David-Lor/template-repository-usage-action@develop
         id: action-get
         with:
-          token: "${{ secrets.GITHUB_TOKEN }}"
           org: "David-Lor"
           repo: "generic-template"
       - name: Print action outputs
