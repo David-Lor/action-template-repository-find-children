@@ -7,11 +7,16 @@ jobs:
     name: "Test"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: David-Lor/template-repository-usage-action@develop
+      - name: Run action
+        uses: David-Lor/template-repository-usage-action@develop
         id: action-get
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           org: "David-Lor"
           repo: "generic-template"
-      - run: |-
-          echo "Action output: ${{ steps.action-get.outputs.repositories }}"
+      - name: Print action outputs
+        run: |-
+          echo "Names: ${{ steps.action-get.outputs.names }}"
+          echo "FullNames: ${{ steps.action-get.outputs.fullnames }}"
+          echo "URLs: ${{ steps.action-get.outputs.urls }}"
+          echo "JSON: ${{ steps.action-get.outputs.json }}"

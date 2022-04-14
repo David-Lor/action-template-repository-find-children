@@ -1,5 +1,3 @@
-import {promises as fs} from 'fs'
-import path from 'path'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
@@ -10,11 +8,12 @@ interface Response {
         hasNextPage: boolean
         endCursor?: string
       }
-      nodes: Item[]
+      nodes: ResponseRepository[]
     }
   }
 }
-interface Item {
+
+interface ResponseRepository {
   name: string
   nameWithOwner: string
   url: string
@@ -26,21 +25,23 @@ interface Item {
   }
 }
 
+interface Repository {
+  name: string
+  nameWithOwner: string
+  url: string
+}
+
 async function run(): Promise<void> {
   try {
-    const authorEmail =
-      core.getInput('author_email') || 'matt.a.elphy@gmail.com'
-    const authorName = core.getInput('author_name') || 'Matthew Elphick'
-
     const token: string = core.getInput('token')
     const octokit = github.getOctokit(token, {
       previews: ['baptiste']
     })
     const {repo} = github.context
-    const org = core.getInput('org') || repo.owner
-    const repoName = core.getInput('repo') || repo.repo
+    const targetOrg = core.getInput('org') || repo.owner
+    const targetTemplateRepoName = core.getInput('repo') || repo.repo
 
-    let items: Item[] = []
+    let items: ResponseRepository[] = []
     let nextPageCursor: string | null | undefined = null
 
     do {
@@ -69,7 +70,7 @@ async function run(): Promise<void> {
         }
       `,
         {
-          owner: org,
+          owner: targetOrg,
           afterCursor: nextPageCursor
         }
       )
@@ -81,27 +82,44 @@ async function run(): Promise<void> {
     } while (nextPageCursor !== undefined)
 
     core.info(
-      `Checking ${items.length} repositories for repositories from ${repoName}`
+      `Checking ${items.length} repositories for repositories from ${targetTemplateRepoName}...`
     )
 
-    const reposProducedByThis = items
-      .filter(
-        d =>
-          d.templateRepository &&
-          d.templateRepository.name === repoName &&
-          d.templateRepository.owner.login === org
-      )
-      .map(d => {
-        return {
-          name: d.nameWithOwner,
-          url: d.url
-        }
-      })
-
-    core.setOutput("repositories", JSON.stringify(reposProducedByThis))
+    handleResults(targetOrg, targetTemplateRepoName, items)
   } catch (error) {
     core.setFailed(error.message)
   }
 }
 
+function handleResults(
+  targetOrg: string,
+  targetTemplateRepo: string,
+  foundRepos: ResponseRepository[]
+): void {
+  const parsedFoundRepos: Repository[] = foundRepos
+    .filter(
+      d =>
+        d.templateRepository &&
+        d.templateRepository.name === targetTemplateRepo &&
+        d.templateRepository.owner.login === targetOrg
+    )
+    .map(d => {
+      return {
+        name: d.name,
+        nameWithOwner: d.nameWithOwner,
+        url: d.url
+      }
+    })
+
+  const names: string[] = parsedFoundRepos.map(d => d.name)
+  const fullNames: string[] = parsedFoundRepos.map(d => d.nameWithOwner)
+  const urls: string[] = parsedFoundRepos.map(d => d.url)
+
+  core.setOutput('json', JSON.stringify(parsedFoundRepos))
+  core.setOutput('names', JSON.stringify(names))
+  core.setOutput('fullnames', JSON.stringify(fullNames))
+  core.setOutput('urls', JSON.stringify(urls))
+}
+
+// noinspection JSIgnoredPromiseFromCall
 run()
