@@ -92,8 +92,10 @@ async function run(): Promise<void> {
           d.templateRepository.owner.login === org
       )
       .map(d => {
-        name: d.nameWithOwner;
-        url: d.url;
+        return {
+          name: d.nameWithOwner,
+          url: d.url
+        }
       })
 
     core.setOutput("repositories", JSON.stringify(reposProducedByThis))
