@@ -40,15 +40,13 @@ const github = __importStar(__nccwpck_require__(438));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const authorEmail = core.getInput('author_email') || 'matt.a.elphy@gmail.com';
-            const authorName = core.getInput('author_name') || 'Matthew Elphick';
             const token = core.getInput('token');
             const octokit = github.getOctokit(token, {
                 previews: ['baptiste']
             });
             const { repo } = github.context;
-            const org = core.getInput('org') || repo.owner;
-            const repoName = core.getInput('repo') || repo.repo;
+            const targetOrg = core.getInput('org') || repo.owner;
+            const targetTemplateRepoName = core.getInput('repo') || repo.repo;
             let items = [];
             let nextPageCursor = null;
             do {
@@ -75,7 +73,7 @@ function run() {
           }
         }
       `, {
-                    owner: org,
+                    owner: targetOrg,
                     afterCursor: nextPageCursor
                 });
                 nextPageCursor = result.repositoryOwner.repositories.pageInfo.hasNextPage
@@ -83,24 +81,35 @@ function run() {
                     : undefined;
                 items = items.concat(result.repositoryOwner.repositories.nodes);
             } while (nextPageCursor !== undefined);
-            core.info(`Checking ${items.length} repositories for repositories from ${repoName}`);
-            const reposProducedByThis = items
-                .filter(d => d.templateRepository &&
-                d.templateRepository.name === repoName &&
-                d.templateRepository.owner.login === org)
-                .map(d => {
-                return {
-                    name: d.nameWithOwner,
-                    url: d.url
-                };
-            });
-            core.setOutput("repositories", JSON.stringify(reposProducedByThis));
+            core.info(`Checking ${items.length} repositories for repositories from ${targetTemplateRepoName}...`);
+            handleResults(targetOrg, targetTemplateRepoName, items);
         }
         catch (error) {
             core.setFailed(error.message);
         }
     });
 }
+function handleResults(targetOrg, targetTemplateRepo, foundRepos) {
+    const parsedFoundRepos = foundRepos
+        .filter(d => d.templateRepository &&
+        d.templateRepository.name === targetTemplateRepo &&
+        d.templateRepository.owner.login === targetOrg)
+        .map(d => {
+        return {
+            name: d.name,
+            nameWithOwner: d.nameWithOwner,
+            url: d.url
+        };
+    });
+    const names = parsedFoundRepos.map(d => d.name);
+    const fullNames = parsedFoundRepos.map(d => d.nameWithOwner);
+    const urls = parsedFoundRepos.map(d => d.url);
+    core.setOutput('json', JSON.stringify(parsedFoundRepos));
+    core.setOutput('names', JSON.stringify(names));
+    core.setOutput('fullnames', JSON.stringify(fullNames));
+    core.setOutput('urls', JSON.stringify(urls));
+}
+// noinspection JSIgnoredPromiseFromCall
 run();
 
 
