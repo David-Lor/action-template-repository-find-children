@@ -4,6 +4,10 @@ on:
     branches:
       - "**"
       - "!main"
+    paths:
+      - "src/**"
+      - "package.json"
+      - ".github/workflows/build.yaml"
   workflow_dispatch:
     inputs:
       build:
@@ -12,44 +16,9 @@ on:
         default: "yes"
 
 jobs:
-  Conditionals:
-    name: "Conditionals"
-    runs-on: "ubuntu-latest"
-    outputs:
-      build: "${{ env.build }}"  # 'true'/'false'
-    env:
-      build: "false"
-    steps:
-      # Checkout
-      - name: "Checkout"
-        uses: "actions/checkout@v3"
-
-      # Identify if files changed
-      - name: "Identify changes"
-        id: changed-files
-        if: "${{ github.event_name != 'workflow_dispatch' }}"
-        uses: "tj-actions/changed-files@b94562c2d4c1b4174b82462f4ed3a2942877032d"
-        with:
-          files: |
-            src/**
-            package.json
-            .github/workflows/build.yaml
-
-      # Set "build" output
-      - name: "Set Build output (from Identify changes, if files changed)"
-        if: "${{ steps.changed-files.outputs.any_changed == 'true' }}"
-        run: "echo build=true >> $GITHUB_ENV"
-      - name: "Set Build output (from Workflow dispatch)"
-        if: "${{ github.event.inputs.build == 'yes' }}"
-        run: "echo build=true >> $GITHUB_ENV"
-
-
   Build:
     name: "Build & Push"
     runs-on: "ubuntu-latest"
-    needs:
-      - "Conditionals"
-    if: "${{ needs.Conditionals.outputs.build == 'true' }}"
     steps:
       # Checkout
       - name: "Checkout"
