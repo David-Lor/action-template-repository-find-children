@@ -1,29 +1,17 @@
-name: 'Template Repository Usage Action'
-description: 'A GitHub action to automatically update a template repository README with a list of repos that used it in an organisation.'
-author: 'Matthew Elphick'
+name: 'Find GitHub Template Repository Children'
+description: 'A GitHub action for finding which repositories, under a single user/organization, are using a certain template.'
+author: 'David Lorenzo'
 inputs:
   token:
     required: true
     description: 'A personal access token that can access your organisation repos, see https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token for more.'
+    default: ${{ github.token }}
   org:
     required: false
     description: 'A way to override the organisation the action is checking for usage of the template'
   repo:
     required: false
     description: 'A way to override the repo the action is checking for usage of in the given org'
-  readme_path:
-    required: false
-    description: 'The path to the README to update'
-  author_name:
-    required: false
-    description: 'The name of the user that will be displayed as the author of the commit'
-  author_email:
-    required: false
-    description: 'The email of the user that will be displayed as the author of the commit'
-  cwd:
-    required: false
-    description: 'The directory where your repository is located. You should use actions/checkout first to set it up'
-    default: '.'
 runs:
   using: 'node12'
   main: 'dist/index.js'
