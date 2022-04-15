@@ -1,8 +1,5 @@
-import {promises as fs} from 'fs'
-import path from 'path'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import simpleGit from 'simple-git/promise'
 
 interface Response {
   repositoryOwner: {
@@ -11,11 +8,12 @@ interface Response {
         hasNextPage: boolean
         endCursor?: string
       }
-      nodes: Item[]
+      nodes: ResponseRepository[]
     }
   }
 }
-interface Item {
+
+interface ResponseRepository {
   name: string
   nameWithOwner: string
   url: string
@@ -27,29 +25,23 @@ interface Item {
   }
 }
 
+interface Repository {
+  name: string
+  nameWithOwner: string
+  url: string
+}
+
 async function run(): Promise<void> {
   try {
-    const authorEmail =
-      core.getInput('author_email') || 'matt.a.elphy@gmail.com'
-    const authorName = core.getInput('author_name') || 'Matthew Elphick'
-    const baseDir = path.join(process.cwd(), core.getInput('cwd') || '')
-    const readmePath = path.join(
-      baseDir,
-      core.getInput('readmePath') || 'README.md'
-    )
-    const readmeContent = await fs.readFile(readmePath, {
-      encoding: 'utf-8'
-    })
-
     const token: string = core.getInput('token')
     const octokit = github.getOctokit(token, {
       previews: ['baptiste']
     })
     const {repo} = github.context
-    const org = core.getInput('org') || repo.owner
-    const repoName = core.getInput('repo') || repo.repo
+    const targetOrg = core.getInput('org') || repo.owner
+    const targetTemplateRepoName = core.getInput('repo') || repo.repo
 
-    let items: Item[] = []
+    let items: ResponseRepository[] = []
     let nextPageCursor: string | null | undefined = null
 
     do {
@@ -78,7 +70,7 @@ async function run(): Promise<void> {
         }
       `,
         {
-          owner: org,
+          owner: targetOrg,
           afterCursor: nextPageCursor
         }
       )
@@ -90,48 +82,44 @@ async function run(): Promise<void> {
     } while (nextPageCursor !== undefined)
 
     core.info(
-      `Checking ${items.length} repositories for repositories from ${repoName}`
+      `Checking ${items.length} repositories for repositories from ${targetTemplateRepoName}...`
     )
 
-    const reposProducedByThis = items
-      .filter(
-        d =>
-          d.templateRepository &&
-          d.templateRepository.name === repoName &&
-          d.templateRepository.owner.login === org
-      )
-      .map(d => `[${d.nameWithOwner}](${d.url})`)
-
-    const output = `# ${reposProducedByThis.length} Repositories using ${
-      repoName === repo.repo ? 'template' : `${repoName}`
-    }\n\n${
-      reposProducedByThis.length ? `* ${reposProducedByThis.join('\n* ')}` : ''
-    }`
-
-    const updatedReadme = readmeContent.replace(
-      /<!-- TEMPLATE_LIST_START -->[\s\S]+<!-- TEMPLATE_LIST_END -->/,
-      `<!-- TEMPLATE_LIST_START -->\n${output}\n<!-- TEMPLATE_LIST_END -->`
-    )
-
-    await fs.writeFile(readmePath, updatedReadme)
-
-    if (readmeContent !== updatedReadme) {
-      core.info('Changes found, committing')
-      const git = simpleGit(baseDir)
-      await git.addConfig('user.email', authorEmail)
-      await git.addConfig('user.name', authorName)
-      await git.add(readmePath)
-      await git.commit(`docs: 📝 Updating template usage list`, undefined, {
-        '--author': `"${authorName} <${authorEmail}>"`
-      })
-      await git.push()
-      core.info('Committed')
-    } else {
-      core.info('No changes, skipping')
-    }
+    handleResults(targetOrg, targetTemplateRepoName, items)
   } catch (error) {
     core.setFailed(error.message)
   }
 }
 
+function handleResults(
+  targetOrg: string,
+  targetTemplateRepo: string,
+  foundRepos: ResponseRepository[]
+): void {
+  const parsedFoundRepos: Repository[] = foundRepos
+    .filter(
+      d =>
+        d.templateRepository &&
+        d.templateRepository.name === targetTemplateRepo &&
+        d.templateRepository.owner.login === targetOrg
+    )
+    .map(d => {
+      return {
+        name: d.name,
+        nameWithOwner: d.nameWithOwner,
+        url: d.url
+      }
+    })
+
+  const names: string[] = parsedFoundRepos.map(d => d.name)
+  const fullNames: string[] = parsedFoundRepos.map(d => d.nameWithOwner)
+  const urls: string[] = parsedFoundRepos.map(d => d.url)
+
+  core.setOutput('json', JSON.stringify(parsedFoundRepos))
+  core.setOutput('names', JSON.stringify(names))
+  core.setOutput('fullnames', JSON.stringify(fullNames))
+  core.setOutput('urls', JSON.stringify(urls))
+}
+
+// noinspection JSIgnoredPromiseFromCall
 run()
