@@ -35,3 +35,8 @@ steps:
 | `token` | ❌        | GitHub token or personal access token that can access your private or organization repos, see [here](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) for more. | Default GITHUB_TOKEN (only supports public repos) |
 | `org`   | ❌        | User or organization that owns the Template repository.                                                                                                                                                     | Owner of repo where action runs                   |
 | `repo`  | ❌        | Name of the Template repository.                                                                                                                                                                            | Name of repo where action runs                    |
+
+## Changelog
+
+- v2.0.0
+  - Initial release of the fork
