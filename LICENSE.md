@@ -1,4 +1,4 @@
-Copyright 2022 David Lorenzo @ github.com/David-Lor (forked from https://github.com/maael/template-repository-usage-action - Original license: https://github.com/maael/template-repository-usage-action/blob/main/LICENSE)
+Copyright 2022-2024 David Lorenzo @ github.com/David-Lor (forked from https://github.com/maael/template-repository-usage-action - Original license: https://github.com/maael/template-repository-usage-action/blob/main/LICENSE)
 
 Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
